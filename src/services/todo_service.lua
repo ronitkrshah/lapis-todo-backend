@@ -1,5 +1,6 @@
 local Todo = require("src.models.Todo")
 local utils = require("lapis.util")
+local yield_error = require("lapis.application").yield_error
 local json_patch = require("lua-jsonpatch")
 
 local from_json, to_json = utils.from_json, utils.to_json
@@ -11,7 +12,12 @@ M.get_all_todos = function()
 end
 
 M.get_todo_by_id = function(id)
-	return Todo:find(id)
+	local todo = Todo:find(id)
+
+	if not todo then
+		yield_error("Todo Not Found")
+	end
+	return todo
 end
 
 M.create_todo = function(todo)
@@ -30,13 +36,25 @@ M.update_todo = function(id, patch)
 	end
 
 	local parsed_todo = from_json(to_json(existing_todo))
-	local err = json_patch.apply(parsed_todo, patch)
+	json_patch.apply(parsed_todo, patch)
 
-	if err then
-		return nil
+	if type(parsed_todo.is_completed) ~= "boolean" then
+		yield_error("is_completed must be a boolean value")
 	end
 
-	return existing_todo:update(parsed_todo)
+	local function patch_updated_todo()
+		existing_todo:update(parsed_todo)
+	end
+
+	local v = pcall(patch_updated_todo)
+
+	if not v then
+		yield_error(
+			"Your request contains an invalid operation, path, or format. Please ensure it follows the JSON Patch standard."
+		)
+	end
+
+	return Todo:find(id)
 end
 
 return M

@@ -1,4 +1,6 @@
 local json_params = require("lapis.application").json_params
+local capture_errors = require("lapis.application").capture_errors
+local exception_handler = require("src.helpers.exception_handler")
 
 local ApiController = {}
 
@@ -35,9 +37,12 @@ end
 function ApiController:http_get(route, req_handler)
 	local api_endpoint, is_route_string = get_route(route, self)
 
-	self.__app:get(api_endpoint, function(req)
-		return is_route_string and req_handler(req) or route(req)
-	end)
+	self.__app:get(
+		api_endpoint,
+		capture_errors(function(req)
+			return is_route_string and req_handler(req) or route(req)
+		end, exception_handler)
+	)
 end
 
 -- Post Method
@@ -46,10 +51,13 @@ function ApiController:http_post(route, req_handler)
 
 	self.__app:post(
 		api_endpoint,
-		json_params(function(req)
-			local body = req.params
-			return is_route_string and req_handler(req, body) or route(req, body)
-		end)
+		capture_errors(
+			json_params(function(req)
+				local body = req.params
+				return is_route_string and req_handler(req, body) or route(req, body)
+			end),
+			exception_handler
+		)
 	)
 end
 

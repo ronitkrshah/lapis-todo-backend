@@ -1,12 +1,16 @@
 local ApiController = require("src.utilities.ApiController")
 local todo_service = require("src.services.todo_service")
+local success_response = require("src.helpers.success_response")
+local error_response = require("src.helpers.error_response")
+local yield_error = require("lapis.application").yield_error
 
 return function(app)
 	local controller = ApiController:create({ route = "todos" }, app)
 
 	-- Get All Todos
 	controller:http_get(function(req)
-		return { json = todo_service.get_all_todos() }
+		local todos = todo_service.get_all_todos()
+		return success_response(todos)
 	end)
 
 	-- Get a single todo
@@ -14,9 +18,9 @@ return function(app)
 		local todo = todo_service.get_todo_by_id(req.params.id)
 
 		if not todo then
-			return { status = 404, json = { status = "failure", success = false, message = "Todo Not Found!" } }
+			return error_response(404, "Not Found", todo)
 		end
-		return { json = todo }
+		return success_response(todo)
 	end)
 
 	-- Create A Todo

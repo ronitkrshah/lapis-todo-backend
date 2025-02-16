@@ -1,13 +1,14 @@
 local ApiController = require("src.utilities.ApiController")
 local todo_service = require("src.services.todo.todo_service")
 local success_response = require("src.helpers.success_response")
+local user_authentication_middleware = require("src.middlewares.user_authentication_middleware")
 
 return function(app)
 	local controller = ApiController:create({ route = "/todos" }, app)
 
 	-- Get All Todos
-	controller:http_get("", {}, function(req)
-		local todos = todo_service.get_all_todos()
+	controller:http_get("", { user_authentication_middleware }, function(req)
+		local todos = todo_service.get_all_todos(req.user.user_id)
 		return success_response(todos)
 	end)
 

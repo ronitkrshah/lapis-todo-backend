@@ -12,8 +12,8 @@ dependencies = {
    "lsqlite3",
    "lua-jsonpatch >= 0-10",
    "lua-resty-jwt >= 0.2.3-0",
-   "lua-resty-jit-uuid >= 0.0.7-2",
    "bcrypt",
+   "uuid >= 1.0.0-1"
 }
 build = {
    type = "builtin",

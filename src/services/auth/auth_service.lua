@@ -1,4 +1,4 @@
-local uuid = require("resty.jit-uuid")
+local uuid = require("uuid")
 local bcrypt = require("bcrypt")
 local success_response = require("src.helpers.success_response")
 local error_response = require("src.helpers.error_response")
@@ -48,7 +48,7 @@ M.register_new_user = function(username, email, password)
 		)
 	end
 
-	local user_id = uuid.generate_v4()
+	local user_id = uuid.v4()
 	local hashed_password = bcrypt.digest(password, 9) -- 9 is salt rounds
 	local access_token = create_token({ user_id = user_id, username = username }, 10)
 	local refresh_token = create_token({ user_id = user_id, username = username }, 360)

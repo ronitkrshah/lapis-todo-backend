@@ -1,8 +1,13 @@
 local lapis = require("lapis")
+local uuid = require("uuid")
 local router = require("src.router")
 local error_response = require("src.helpers.error_response")
 
 local app = lapis.Application()
+
+-- Set the UUID generator to use the system's random number generator.
+-- This ensures that UUIDs are generated securely and reliably.
+uuid.set_rng(uuid.rng.urandom())
 
 app:get("/", function()
 	return {

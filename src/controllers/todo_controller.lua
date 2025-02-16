@@ -1,4 +1,4 @@
-local uuid = require("resty.jit-uuid")
+local uuid = require("uuid")
 local ApiController = require("src.utilities.ApiController")
 local todo_service = require("src.services.todo.todo_service")
 local success_response = require("src.helpers.success_response")
@@ -33,7 +33,7 @@ return function(app)
 			local current_time = os.time()
 
 			local validated_todo = {
-				id = uuid.generate_v4(),
+				id = uuid.v4(),
 				title = body.title,
 				description = body.description or "",
 				status = "pending", -- Initial status

@@ -9,7 +9,7 @@ return {
 			{ "username", types.text },
 			{ "email", types.text },
 			{ "password", types.text },
-			{ "refresh_token", types.text, { null = true } },
+			{ "refresh_token", types.text },
 			{ "created_at", types.text },
 			{ "updated_at", types.text },
 			"PRIMARY KEY (id)",
@@ -20,8 +20,8 @@ return {
 		schema.create_table("todos", {
 			{ "id", types.text },
 			{ "title", types.text },
-			{ "description", types.text, null = true },
-			{ "status", types.text, default = "pending" },
+			{ "description", types.text },
+			{ "status", types.text }, -- pending or completed
 			{ "user_id", types.text },
 			{ "completed_on", types.text },
 			{ "created_at", types.text },

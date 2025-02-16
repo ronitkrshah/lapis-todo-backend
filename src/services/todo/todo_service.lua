@@ -2,16 +2,17 @@ local Todo = require("src.models.Todo")
 local utils = require("lapis.util")
 local json_patch = require("lua-jsonpatch")
 local error_response = require("src.helpers.error_response")
+local uuid = require("resty.jit-uuid")
 local from_json, to_json = utils.from_json, utils.to_json
 
 local M = {}
 
-M.get_all_todos = function()
-	return Todo:select()
+M.get_all_todos = function(user_id)
+	return Todo:select({ user_id = user_id })
 end
 
-M.get_todo_by_id = function(id)
-	local todo = Todo:find(id)
+M.get_todo_by_id = function(user_id, id)
+	local todo = Todo:find({ user_id = user_id, id = id })
 
 	if not todo then
 		return nil,
@@ -25,11 +26,7 @@ M.get_todo_by_id = function(id)
 end
 
 M.create_todo = function(todo)
-	local created_todo = Todo:create({
-		id = Todo:count() + 1,
-		todo = todo.todo,
-		is_completed = todo.is_completed or 0,
-	})
+	local created_todo = Todo:create(todo)
 
 	if not created_todo then
 		return nil,

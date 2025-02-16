@@ -1,4 +1,3 @@
-local jwt = require("resty.jwt")
 local uuid = require("resty.jit-uuid")
 local bcrypt = require("bcrypt")
 local success_response = require("src.helpers.success_response")
@@ -20,8 +19,8 @@ M.login_user = function(email, password)
 		return error_response(401, "Unauthorized", "The provided password is incorrect. Please try again")
 	end
 
-	local access_token = create_token({ user_id = user.id, username = user.username }, 10)
-	local refresh_token = create_token({ user_id = user.id, username = user.username }, 360)
+	local access_token = create_token({ user_id = user.id, username = user.username }, 10) -- Validity 10 Mins
+	local refresh_token = create_token({ user_id = user.id, username = user.username }, 360) -- Validity 6 Hours
 	local current_time = os.time()
 
 	local is_mutation_success = user:update({ refresh_token = refresh_token, updated_at = current_time })

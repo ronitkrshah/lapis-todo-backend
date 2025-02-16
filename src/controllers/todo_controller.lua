@@ -1,7 +1,10 @@
+local uuid = require("resty.jit-uuid")
 local ApiController = require("src.utilities.ApiController")
 local todo_service = require("src.services.todo.todo_service")
 local success_response = require("src.helpers.success_response")
 local user_authentication_middleware = require("src.middlewares.user_authentication_middleware")
+local create_todo_validation = require("src.validations.todo.create_todo_validation")
+local request_body_validation_middleware = require("src.middlewares.request_body_validation_middleware")
 
 return function(app)
 	local controller = ApiController:create({ route = "/todos" }, app)
@@ -23,15 +26,31 @@ return function(app)
 	end)
 
 	-- Create A Todo
-	controller:http_post("/create", {}, function(_, body)
-		local todo, err = todo_service.create_todo(body)
+	controller:http_post(
+		"/create",
+		{ user_authentication_middleware, request_body_validation_middleware(create_todo_validation) },
+		function(app, body)
+			local current_time = os.time()
 
-		if not todo then
-			return err
+			local validated_todo = {
+				id = uuid.generate_v4(),
+				title = body.title,
+				description = body.description or "",
+				status = "pending", -- Initial status
+				user_id = app.user.user_id,
+				completed_on = "", -- Initial completed
+				created_at = current_time,
+				updated_at = current_time,
+			}
+
+			local todo, err = todo_service.create_todo(validated_todo)
+
+			if not todo then
+				return err
+			end
+			return success_response(201, todo)
 		end
-
-		return success_response(201, todo)
-	end)
+	)
 
 	-- Create A Todo
 	controller:http_post("/update", {}, function(_, body)

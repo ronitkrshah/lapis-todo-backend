@@ -1,3 +1,3 @@
 return {
-	require("migrations.001_create_todos")[001],
+	require("migrations.001_initial_migration").up,
 }

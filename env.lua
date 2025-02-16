@@ -1,0 +1,3 @@
+return {
+	JWT_SECRET_KEY = "MY_JWT_SECRET_KEY",
+}

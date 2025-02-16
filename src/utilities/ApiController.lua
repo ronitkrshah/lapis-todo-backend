@@ -20,41 +20,58 @@ function ApiController:create(options, app)
 	return obj
 end
 
--- Helper function to return route and a boolean that indicates is route a string
-local function get_route(route, app)
-	local is_route_string = type(route) == "string"
-	local endpoint = string.format("/api/%s/%s", app.__api_version, app.__route)
+-- Return a full api endpoint with base route and api version
+local function get_full_api_endpoint(route, app)
+	return string.format("/api/%s%s", app.__api_version, app.__route .. route)
+end
 
-	-- Check if any routes passed
-	if is_route_string and route ~= "" then
-		endpoint = endpoint .. "/" .. route
+-- Each middleware must throw an `error(error_response(code, "MSG")) if it fails
+local function apply_middlewares(middlewares, req)
+	for _, middleware in ipairs(middlewares) do
+		local success, retval = pcall(middleware, req)
+		if not success then
+			return retval
+		end
 	end
 
-	return endpoint, is_route_string
+	return true
 end
 
 -- Get Method
-function ApiController:http_get(route, req_handler)
-	local api_endpoint, is_route_string = get_route(route, self)
+function ApiController:http_get(route, middlewares, req_handler)
+	local api_endpoint = get_full_api_endpoint(route, self)
 
 	self.__app:get(
 		api_endpoint,
 		capture_errors(function(req)
-			return is_route_string and req_handler(req) or route(req)
+			local success = apply_middlewares(middlewares, req)
+
+			if type(success) ~= "boolean" then
+				-- Here succes contains error message
+				return success
+			end
+
+			return req_handler(req)
 		end, exception_handler)
 	)
 end
 
 -- Post Method
-function ApiController:http_post(route, req_handler)
-	local api_endpoint, is_route_string = get_route(route, self)
+function ApiController:http_post(route, middlewares, req_handler)
+	local api_endpoint = get_full_api_endpoint(route, self)
 
 	self.__app:post(
 		api_endpoint,
 		capture_errors(
 			json_params(function(req)
 				local body = req.params
-				return is_route_string and req_handler(req, body) or route(req, body)
+				local success = apply_middlewares(middlewares, req)
+
+				if type(success) ~= "boolean" then
+					-- Here succes contains error message
+					return success
+				end
+				return req_handler(req, body)
 			end),
 			exception_handler
 		)

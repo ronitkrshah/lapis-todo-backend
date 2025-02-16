@@ -3,16 +3,16 @@ local todo_service = require("src.services.todo.todo_service")
 local success_response = require("src.helpers.success_response")
 
 return function(app)
-	local controller = ApiController:create({ route = "todos" }, app)
+	local controller = ApiController:create({ route = "/todos" }, app)
 
 	-- Get All Todos
-	controller:http_get(function(req)
+	controller:http_get("", {}, function(req)
 		local todos = todo_service.get_all_todos()
 		return success_response(todos)
 	end)
 
 	-- Get a single todo
-	controller:http_get(":id", function(req)
+	controller:http_get("/:id", {}, function(req)
 		local todo, err = todo_service.get_todo_by_id(req.params.id)
 
 		if err then
@@ -22,7 +22,7 @@ return function(app)
 	end)
 
 	-- Create A Todo
-	controller:http_post("create", function(_, body)
+	controller:http_post("/create", {}, function(_, body)
 		local todo, err = todo_service.create_todo(body)
 
 		if not todo then
@@ -33,7 +33,7 @@ return function(app)
 	end)
 
 	-- Create A Todo
-	controller:http_post("update", function(_, body)
+	controller:http_post("/update", {}, function(_, body)
 		local status, err = todo_service.update_todo(body.id, body.patch)
 
 		if not status then

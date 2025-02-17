@@ -1,8 +1,6 @@
 local Todo = require("src.models.Todo")
-local utils = require("lapis.util")
 local json_patch = require("lua-jsonpatch")
 local error_response = require("src.helpers.error_response")
-local from_json, to_json = utils.from_json, utils.to_json
 
 local M = {}
 
@@ -39,8 +37,8 @@ M.create_todo = function(todo)
 	return created_todo
 end
 
-M.update_todo = function(id, patch)
-	local existing_todo = Todo:find(id)
+M.update_todo = function(user_id, id, patch)
+	local existing_todo = Todo:find({ user_id = user_id, id = id })
 
 	if not existing_todo then
 		return error_response(
@@ -50,23 +48,23 @@ M.update_todo = function(id, patch)
 		)
 	end
 
-	local parsed_todo = from_json(to_json(existing_todo))
+	local parsed_todo = existing_todo
 	json_patch.apply(parsed_todo, patch)
 
-	if type(parsed_todo.is_completed) ~= "boolean" then
-		return nil,
-			error_response(
-				422,
-				"Unprocessable Entity",
-				"The 'is_completed' field must be either true or false. Please provide a valid boolean value."
-			)
+	-- Check if `status` exists and is not empty
+	if parsed_todo.status and parsed_todo.status ~= "" then
+		-- Validate allowed values
+		if parsed_todo.status ~= "completed" and parsed_todo.status ~= "pending" then
+			return nil, error_response(400, "Bad Request", "Status must be 'completed' or 'pending'")
+		end
 	end
 
 	local function patch_updated_todo()
+		parsed_todo.updated_at = os.time()
 		existing_todo:update(parsed_todo)
 	end
 
-	local is_update_success = pcall(patch_updated_todo)
+	local is_update_success, err = pcall(patch_updated_todo)
 
 	if not is_update_success then
 		return nil,
@@ -75,11 +73,12 @@ M.update_todo = function(id, patch)
 				"Error While Patching Entity",
 				"The update operation for Todo ID "
 					.. id
-					.. " caused a data conflict. Please check the provided values."
+					.. " caused a data conflict. Please check the provided values.",
+				err
 			)
 	end
 
-	return Todo:find(id)
+	return { updated = true }
 end
 
 return M

@@ -17,7 +17,7 @@ return function(app)
 
 	-- Get a single todo
 	controller:http_get("/:id", { user_authentication_middleware }, function(req)
-		local todo, err = todo_service.get_todo_by_id(req.user.id, req.params.id)
+		local todo, err = todo_service.get_todo_by_id(req.user.user_id, req.params.id)
 
 		if err then
 			return err
@@ -53,12 +53,12 @@ return function(app)
 	)
 
 	-- Create A Todo
-	controller:http_post("/update", { user_authentication_middleware }, function(_, body)
-		local status, err = todo_service.update_todo(body.id, body.patch)
+	controller:http_post("/update", { user_authentication_middleware }, function(req, body)
+		local status, err = todo_service.update_todo(req.user.user_id, body.id, body.patch)
 
 		if not status then
 			return err
 		end
-		return success_response(200, status)
+		return success_response(201, status)
 	end)
 end

@@ -5,7 +5,7 @@ local error_response = require("src.helpers.error_response")
 local M = {}
 
 M.get_all_todos = function(user_id)
-	return Todo:find({ user_id = user_id })
+	return Todo:select({ user_id = user_id })
 end
 
 M.get_todo_by_id = function(user_id, id)
@@ -79,6 +79,21 @@ M.update_todo = function(user_id, id, patch)
 	end
 
 	return { updated = true }
+end
+
+M.delete_todo = function(user_id, id)
+	local todo = Todo:find({ user_id = user_id, id = id })
+
+	if not todo then
+		return nil,
+			error_response(
+				404,
+				"Resource Not Found",
+				"The requested Todo with ID " .. id .. " was not found in the system."
+			)
+	end
+	todo:delete()
+	return { deleted = true }
 end
 
 return M

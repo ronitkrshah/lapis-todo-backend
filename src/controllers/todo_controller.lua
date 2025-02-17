@@ -61,4 +61,14 @@ return function(app)
 		end
 		return success_response(201, status)
 	end)
+
+	-- Delete a Todo
+	controller:http_delete("/delete/:id", { user_authentication_middleware }, function(req)
+		local status, err = todo_service.delete_todo(req.user.user_id, req.params.id)
+
+		if not status then
+			return err
+		end
+		return success_response(200, status)
+	end)
 end

@@ -78,4 +78,21 @@ function ApiController:http_post(route, middlewares, req_handler)
 	)
 end
 
+function ApiController:http_delete(route, middlewares, req_handler)
+	local api_endpoint = get_full_api_endpoint(route, self)
+
+	self.__app:delete(
+		api_endpoint,
+		capture_errors(function(req)
+			local success = apply_middlewares(middlewares, req)
+
+			if type(success) ~= "boolean" then
+				-- Here succes contains error message
+				return success
+			end
+
+			return req_handler(req)
+		end, exception_handler)
+	)
+end
 return ApiController

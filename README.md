@@ -16,7 +16,7 @@ A simple TODO CRUD backend using Lua Lapis with JWT authentication.
 ### Steps
 1. **Clone the Repository**
    ```sh
-   git clone https://github.com/ronitkrshah/todo-app TodoApp
+   git clone https://github.com/ronitkrshah/lapis-todo-backend TodoApp
    cd TodoApp
    ```
 
